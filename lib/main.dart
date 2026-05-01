@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'core/theme.dart';
 import 'features/home/home_screen.dart';
 
@@ -18,6 +17,12 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
       home: const HomeScreen(),
+      builder: (context, child) {
+        return Container(
+          color: AppTheme.darkTheme.colorScheme.surface,
+          child: child,
+        );
+      },
     );
   }
 }
