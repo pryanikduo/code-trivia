@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+// import 'package:flutter_svg/flutter_svg.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -55,16 +56,17 @@ class HomeScreen extends StatelessWidget {
                       color: const Color.fromRGBO(240, 232, 213, 1.0),
                       borderRadius: BorderRadius.circular(20),
                     ),
+                    
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _StatItem(value: '7', label: 'дней'),
+                        _StatItem(value: '7', label: 'дней', imgPath: 'assets/images/fire (2).png'),
                         Container(
-                          width: 1,
+                          width: 2,
                           height: 40,
                           color: Colors.grey[400],
                         ),
-                        _StatItem(value: '1000', label: 'очков'),
+                        _StatItem(value: '1000', label: 'очков', secondImgPath: 'assets/images/cup (2).png'),
                       ],
                     ),
                   ),
@@ -92,10 +94,13 @@ class HomeScreen extends StatelessWidget {
                       mainAxisSpacing: 12,
                       childAspectRatio: 1.0, // Квадратные карточки
                     ),
-                    itemCount: 5,
+                    itemCount: 4,
                     itemBuilder: (context, index) {
-                      final categories = ['Python', 'SQL', 'Базы данных', 'JS', 'HTML'];
-                      return _CategoryCard(title: categories[index]);
+                      final categories = [{'title': 'Python', 'image': 'assets/images/python (2).png'}, 
+                      {'title': 'SQL', 'image': 'assets/images/sql (2).png'}, 
+                      {'title': 'JavaScript', 'image': 'assets/images/javascript (2).png'}, 
+                      {'title': 'HTML', 'image': 'assets/images/html (2).png'}];
+                      return _CategoryCard(title: categories[index]['title']!, imagePath: categories[index]['image']!);
                     },
                   ),
                   
@@ -154,29 +159,52 @@ class HomeScreen extends StatelessWidget {
 class _StatItem extends StatelessWidget {
   final String value;
   final String label;
+  final String? imgPath;
+  final String? secondImgPath;
 
-  const _StatItem({required this.value, required this.label});
+  const _StatItem({required this.value, required this.label, this.imgPath, this.secondImgPath});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: Color.fromRGBO(33, 40, 68, 1.0),
+        if(imgPath != null)
+          Image.asset(
+            imgPath!,
+            width: 40,
+            height: 40,
+            fit: BoxFit.contain,
           ),
+        const SizedBox(width: 20),
+        Column(
+          children: [
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color.fromRGBO(33, 40, 68, 1.0),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                color: Color.fromRGBO(33, 40, 68, 1.0),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            color: Color.fromRGBO(33, 40, 68, 1.0),
+        const SizedBox(width: 20),
+        if(secondImgPath != null)
+          Image.asset(
+            secondImgPath!,
+            width: 40,
+            height: 40,
+            fit: BoxFit.contain,
           ),
-        ),
       ],
     );
   }
@@ -185,8 +213,9 @@ class _StatItem extends StatelessWidget {
 // Компонент карточки категории
 class _CategoryCard extends StatelessWidget {
   final String title;
+  final String imagePath;
 
-  const _CategoryCard({required this.title});
+  const _CategoryCard({required this.title, required this.imagePath});
 
   @override
   Widget build(BuildContext context) {
@@ -198,18 +227,11 @@ class _CategoryCard extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
+          Image.asset(
+            imagePath,
             width: 60,
             height: 60,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.code,
-              size: 32,
-              color: Color.fromRGBO(33, 40, 68, 1.0),
-            ),
+            fit: BoxFit.contain
           ),
           const SizedBox(height: 12),
           Text(
