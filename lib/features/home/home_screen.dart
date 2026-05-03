@@ -54,7 +54,7 @@ class HomeScreen extends StatelessWidget {
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: const Color.fromRGBO(240, 232, 213, 1.0),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     
                     child: Row(
@@ -125,7 +125,7 @@ class HomeScreen extends StatelessWidget {
                     foregroundColor: const Color.fromRGBO(33, 40, 68, 1.0),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     elevation: 4, // Небольшая тень для кнопки
                   ),
@@ -219,32 +219,45 @@ class _CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color.fromRGBO(107, 152, 191, 1.0),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset(
-            imagePath,
-            width: 60,
-            height: 60,
-            fit: BoxFit.contain
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Color.fromRGBO(33, 40, 68, 1.0),
+    return InkWell(
+      onTap: () => _goCategory(context),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color.fromRGBO(107, 152, 191, 1.0),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              imagePath,
+              width: 60,
+              height: 60,
+              fit: BoxFit.contain
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Color.fromRGBO(33, 40, 68, 1.0),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  void _goCategory (BuildContext context){
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Загрузка экрана категорий...'),
+        duration: Duration(seconds: 1),
       ),
     );
   }
 }
+
