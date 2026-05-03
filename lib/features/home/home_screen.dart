@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:code_trivia/features/home/drawer_menu.dart';
 // import 'package:flutter_svg/flutter_svg.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -18,7 +19,22 @@ class HomeScreen extends StatelessWidget {
             color: Color.fromRGBO(240, 232, 213, 1.0),
           ),
         ),
+        actions:[
+          Builder(
+            builder: (context) => IconButton(
+              onPressed: () {
+                Scaffold.of(context).openEndDrawer();
+              }, 
+              icon: const Icon(
+                Icons.menu,
+                color: Color.fromRGBO(240, 232, 213, 1.0),
+                size: 28,
+              ),
+            ),
+          ),
+        ] 
       ),
+      endDrawer: const AppDrawer(),
       body: Stack(
         children: [
           // СКРОЛЛЯЩИЙСЯ КОНТЕНТ (с отступом снизу, чтобы не перекрывать кнопку)
