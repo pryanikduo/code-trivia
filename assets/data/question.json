@@ -1,0 +1,141 @@
+{
+  "categories": [
+    { "id": "cat_python", "name": "Python", "slug": "python" },
+    { "id": "cat_sql", "name": "SQL", "slug": "sql" },
+    { "id": "cat_js", "name": "JavaScript", "slug": "javascript" },
+    { "id": "cat_html", "name": "HTML", "slug": "html" }
+  ],
+  "questions": [
+    {
+      "id": "q_py_1",
+      "category_id": "cat_python",
+      "question_text": "Какой оператор используется для целочисленного деления в Python?",
+      "explanation": "Оператор // выполняет целочисленное деление (деление без остатка, округление вниз).",
+      "points": 5,
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_py_2",
+      "category_id": "cat_python",
+      "question_text": "Что выведет следующий код? print(type(10 / 2))",
+      "explanation": "В Python 3 оператор / всегда возвращает float, даже если результат целый.",
+      "points": 10,
+      "difficulty": "medium"
+    },
+    {
+      "id": "q_py_3",
+      "category_id": "cat_python",
+      "question_text": "Какой из этих методов используется для добавления элемента в конец списка?",
+      "explanation": "list.append(x) добавляет элемент x в конец списка. extend - для итерабельного объекта, insert - по индексу.",
+      "points": 5,
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_sql_1",
+      "category_id": "cat_sql",
+      "question_text": "Какой оператор SQL используется для извлечения данных из базы данных?",
+      "explanation": "SELECT используется для выборки данных. UPDATE изменяет, DELETE удаляет, INSERT INTO добавляет.",
+      "points": 5,
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_sql_2",
+      "category_id": "cat_sql",
+      "question_text": "Что делает условие 'WHERE column IS NULL'?",
+      "explanation": "Проверяет, имеет ли колонка значение NULL (отсутствие данных).",
+      "points": 10,
+      "difficulty": "medium"
+    },
+    {
+      "id": "q_sql_3",
+      "category_id": "cat_sql",
+      "question_text": "Какое ключевое слово используется для объединения двух таблиц по общему полю?",
+      "explanation": "JOIN (или INNER JOIN) объединяет строки из двух таблиц на основе связанного столбца.",
+      "points": 10,
+      "difficulty": "medium"
+    },
+    {
+      "id": "q_js_1",
+      "category_id": "cat_js",
+      "question_text": "Как объявить переменную с блочной областью видимости в JavaScript?",
+      "explanation": "let и const имеют блочную область видимости. var - функциональную или глобальную.",
+      "points": 5,
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_js_2",
+      "category_id": "cat_js",
+      "question_text": "Что выведет console.log(typeof null)?",
+      "explanation": "В JavaScript typeof null возвращает 'object' - это историческая ошибка, оставленная для обратной совместимости.",
+      "points": 15,
+      "difficulty": "hard"
+    },
+    {
+      "id": "q_html_1",
+      "category_id": "cat_html",
+      "question_text": "Какой тег используется для создания ссылки в HTML?",
+      "explanation": "Тег <a> (anchor) с атрибутом href создаёт гиперссылку.",
+      "points": 5,
+      "difficulty": "easy"
+    },
+    {
+      "id": "q_html_2",
+      "category_id": "cat_html",
+      "question_text": "Какой атрибут делает изображение доступным для скринридеров?",
+      "explanation": "alt - альтернативный текст, описывающий изображение для скринридеров и при ошибке загрузки.",
+      "points": 10,
+      "difficulty": "medium"
+    }
+  ],
+  "answers": [
+    { "id": "a_py1_1", "question_id": "q_py_1", "answer_text": "/", "is_correct": false },
+    { "id": "a_py1_2", "question_id": "q_py_1", "answer_text": "//", "is_correct": true },
+    { "id": "a_py1_3", "question_id": "q_py_1", "answer_text": "%", "is_correct": false },
+    { "id": "a_py1_4", "question_id": "q_py_1", "answer_text": "**", "is_correct": false },
+    
+    { "id": "a_py2_1", "question_id": "q_py_2", "answer_text": "<class 'int'>", "is_correct": false },
+    { "id": "a_py2_2", "question_id": "q_py_2", "answer_text": "<class 'float'>", "is_correct": true },
+    { "id": "a_py2_3", "question_id": "q_py_2", "answer_text": "<class 'str'>", "is_correct": false },
+    { "id": "a_py2_4", "question_id": "q_py_2", "answer_text": "Ошибка", "is_correct": false },
+    
+    { "id": "a_py3_1", "question_id": "q_py_3", "answer_text": "append()", "is_correct": true },
+    { "id": "a_py3_2", "question_id": "q_py_3", "answer_text": "extend()", "is_correct": false },
+    { "id": "a_py3_3", "question_id": "q_py_3", "answer_text": "insert()", "is_correct": false },
+    { "id": "a_py3_4", "question_id": "q_py_3", "answer_text": "add()", "is_correct": false },
+    
+    { "id": "a_sql1_1", "question_id": "q_sql_1", "answer_text": "SELECT", "is_correct": true },
+    { "id": "a_sql1_2", "question_id": "q_sql_1", "answer_text": "UPDATE", "is_correct": false },
+    { "id": "a_sql1_3", "question_id": "q_sql_1", "answer_text": "DELETE", "is_correct": false },
+    { "id": "a_sql1_4", "question_id": "q_sql_1", "answer_text": "INSERT", "is_correct": false },
+    
+    { "id": "a_sql2_1", "question_id": "q_sql_2", "answer_text": "Выбирает строки, где колонка равна 0", "is_correct": false },
+    { "id": "a_sql2_2", "question_id": "q_sql_2", "answer_text": "Проверяет, что колонка содержит пустую строку", "is_correct": false },
+    { "id": "a_sql2_3", "question_id": "q_sql_2", "answer_text": "Проверяет, что колонка не имеет значения (NULL)", "is_correct": true },
+    { "id": "a_sql2_4", "question_id": "q_sql_2", "answer_text": "Удаляет строки с NULL значением", "is_correct": false },
+    
+    { "id": "a_sql3_1", "question_id": "q_sql_3", "answer_text": "UNION", "is_correct": false },
+    { "id": "a_sql3_2", "question_id": "q_sql_3", "answer_text": "JOIN", "is_correct": true },
+    { "id": "a_sql3_3", "question_id": "q_sql_3", "answer_text": "GROUP BY", "is_correct": false },
+    { "id": "a_sql3_4", "question_id": "q_sql_3", "answer_text": "ORDER BY", "is_correct": false },
+    
+    { "id": "a_js1_1", "question_id": "q_js_1", "answer_text": "var", "is_correct": false },
+    { "id": "a_js1_2", "question_id": "q_js_1", "answer_text": "let", "is_correct": true },
+    { "id": "a_js1_3", "question_id": "q_js_1", "answer_text": "const", "is_correct": true },
+    { "id": "a_js1_4", "question_id": "q_js_1", "answer_text": "function", "is_correct": false },
+    
+    { "id": "a_js2_1", "question_id": "q_js_2", "answer_text": "'null'", "is_correct": false },
+    { "id": "a_js2_2", "question_id": "q_js_2", "answer_text": "'object'", "is_correct": true },
+    { "id": "a_js2_3", "question_id": "q_js_2", "answer_text": "'undefined'", "is_correct": false },
+    { "id": "a_js2_4", "question_id": "q_js_2", "answer_text": "Ошибка компиляции", "is_correct": false },
+    
+    { "id": "a_html1_1", "question_id": "q_html_1", "answer_text": "<link>", "is_correct": false },
+    { "id": "a_html1_2", "question_id": "q_html_1", "answer_text": "<a>", "is_correct": true },
+    { "id": "a_html1_3", "question_id": "q_html_1", "answer_text": "<href>", "is_correct": false },
+    { "id": "a_html1_4", "question_id": "q_html_1", "answer_text": "<url>", "is_correct": false },
+    
+    { "id": "a_html2_1", "question_id": "q_html_2", "answer_text": "src", "is_correct": false },
+    { "id": "a_html2_2", "question_id": "q_html_2", "answer_text": "alt", "is_correct": true },
+    { "id": "a_html2_3", "question_id": "q_html_2", "answer_text": "title", "is_correct": false },
+    { "id": "a_html2_4", "question_id": "q_html_2", "answer_text": "aria-label", "is_correct": false }
+  ]
+}

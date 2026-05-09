@@ -1,7 +1,9 @@
+import 'package:code_trivia/repository/QuizRepository.dart';
 import 'package:flutter/material.dart';
 import 'package:code_trivia/features/home/drawer_menu.dart';
 import 'package:provider/provider.dart';
 import 'package:code_trivia/providers/UserProgress.dart';
+import 'package:code_trivia/features/quiz/quiz_screen.dart';
 // import 'package:flutter_svg/flutter_svg.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -169,13 +171,16 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  void _goQuiz(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Загрузка викторины...'),
-        duration: Duration(seconds: 1),
-      ),
+  void _goQuiz(BuildContext context) async {
+    showDialog(
+      context: context, 
+      builder: (BuildContext context) {return CircularProgressIndicator();}
     );
+    final quizData = await QuizRepository.loadQuizData();
+    Navigator.pop(context);
+    final questions = quizData.questions.toList()..shuffle();
+    final selected = questions.take(5).toList();
+    Navigator.push(context, MaterialPageRoute(builder: (_) => QuizScreen(questions: selected)));
   }
 }
 
