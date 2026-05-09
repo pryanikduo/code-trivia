@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:code_trivia/features/home/drawer_menu.dart';
+import 'package:provider/provider.dart';
+import 'package:code_trivia/providers/UserProgress.dart';
 // import 'package:flutter_svg/flutter_svg.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -7,6 +9,8 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final userProgress = context.watch<UserProgress>();
+    if (!userProgress.isInitialized) return CircularProgressIndicator();
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -82,7 +86,11 @@ class HomeScreen extends StatelessWidget {
                           height: 40,
                           color: Colors.grey[400],
                         ),
-                        _StatItem(value: '1000', label: 'очков', secondImgPath: 'assets/images/cup (2).png'),
+                        _StatItem(
+                          value: userProgress.totalPoints.toString(), 
+                          label: 'очков', 
+                          secondImgPath: 'assets/images/cup (2).png'
+                        ),
                       ],
                     ),
                   ),
