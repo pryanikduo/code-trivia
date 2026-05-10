@@ -4,15 +4,37 @@ import 'package:code_trivia/features/home/drawer_menu.dart';
 import 'package:provider/provider.dart';
 import 'package:code_trivia/providers/UserProgress.dart';
 import 'package:code_trivia/features/quiz/quiz_screen.dart';
-// import 'package:flutter_svg/flutter_svg.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  QuizData? _quizData;
+  bool _isLoading = true;
+
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final data = await QuizRepository.loadQuizData();
+    if(mounted){
+      setState(() {
+        _quizData = data;
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final userProgress = context.watch<UserProgress>();
-    if (!userProgress.isInitialized) return CircularProgressIndicator();
+    if (!userProgress.isInitialized || _isLoading) return CircularProgressIndicator();
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -43,7 +65,6 @@ class HomeScreen extends StatelessWidget {
       endDrawer: const AppDrawer(),
       body: Stack(
         children: [
-          // СКРОЛЛЯЩИЙСЯ КОНТЕНТ (с отступом снизу, чтобы не перекрывать кнопку)
           SingleChildScrollView(
             padding: const EdgeInsets.only(bottom: 100), // Отступ для кнопки
             child: Padding(
@@ -120,13 +141,18 @@ class HomeScreen extends StatelessWidget {
                       mainAxisSpacing: 12,
                       childAspectRatio: 1.0, // Квадратные карточки
                     ),
-                    itemCount: 4,
+                    itemCount: _quizData!.categories.length,
                     itemBuilder: (context, index) {
-                      final categories = [{'title': 'Python', 'image': 'assets/images/python (2).png'}, 
-                      {'title': 'SQL', 'image': 'assets/images/sql (2).png'}, 
-                      {'title': 'JavaScript', 'image': 'assets/images/javascript (2).png'}, 
-                      {'title': 'HTML', 'image': 'assets/images/html (2).png'}];
-                      return _CategoryCard(title: categories[index]['title']!, imagePath: categories[index]['image']!);
+                      // final categories = [{'title': 'Python', 'image': 'assets/images/python (2).png'}, 
+                      // {'title': 'SQL', 'image': 'assets/images/sql (2).png'}, 
+                      // {'title': 'JavaScript', 'image': 'assets/images/javascript (2).png'}, 
+                      // {'title': 'HTML', 'image': 'assets/images/html (2).png'}];
+                      final category = _quizData!.categories[index];
+                      return _CategoryCard(
+                        title: category.name,
+                        imagePath: category.image,
+                        onTap: () => _onCategoryTap(context, category.id),
+                      );
                     },
                   ),
                   
@@ -180,6 +206,65 @@ class HomeScreen extends StatelessWidget {
     Navigator.pop(context);
     final questions = quizData.questions.toList()..shuffle();
     final selected = questions.take(5).toList();
+    Navigator.push(context, MaterialPageRoute(builder: (_) => QuizScreen(questions: selected)));
+  }
+
+  void _onCategoryTap (BuildContext context, String categoryId){
+    showDialog(
+      context: context,
+      builder: (dialogContext) {          // dialogContext — контекст диалога, не главного экрана
+        return AlertDialog(
+          title: Text('Выберите сложность'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min, 
+            children: [
+              ListTile(
+                title: Text('Лёгкая'),
+                onTap: () {
+                  // У нас есть доступ к categoryId из внешней области
+                  _startQuiz(context, categoryId, 'easy');
+                  Navigator.pop(dialogContext); // закрыть диалог
+                },
+              ),
+              ListTile(
+                title: Text('Средняя'),
+                onTap: () {
+                  _startQuiz(context, categoryId, 'medium');
+                  Navigator.pop(dialogContext);
+                },
+              ),
+              ListTile(
+                title: Text('Сложная'),
+                onTap: () {
+                  _startQuiz(context, categoryId, 'hard');
+                  Navigator.pop(dialogContext);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _startQuiz(BuildContext context, String categoryId, String difficulty) async {
+    showDialog(
+      context: context, 
+      barrierDismissible: false,
+      builder: (BuildContext context) {return CircularProgressIndicator();}
+    );
+    final quizData = await QuizRepository.loadQuizData();
+    Navigator.pop(context);
+    final filteredQuestions = quizData.questions.where((q) =>
+      q.categoryId == categoryId && q.difficulty == difficulty).toList();
+    if(filteredQuestions.isEmpty){
+      ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Нет вопросов для выбранной сложности')),
+      );
+      return;
+    }
+    final shuffled = filteredQuestions.toList()..shuffle();
+    final selected = shuffled.take(5).toList();
     Navigator.push(context, MaterialPageRoute(builder: (_) => QuizScreen(questions: selected)));
   }
 }
@@ -243,13 +328,14 @@ class _StatItem extends StatelessWidget {
 class _CategoryCard extends StatelessWidget {
   final String title;
   final String imagePath;
+  final VoidCallback onTap;
 
-  const _CategoryCard({required this.title, required this.imagePath});
+  const _CategoryCard({required this.title, required this.imagePath, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => _goCategory(context),
+      onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         decoration: BoxDecoration(
@@ -277,14 +363,6 @@ class _CategoryCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-  void _goCategory (BuildContext context){
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Загрузка экрана категорий...'),
-        duration: Duration(seconds: 1),
       ),
     );
   }

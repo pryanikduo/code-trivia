@@ -1,3 +1,4 @@
+import 'package:code_trivia/features/settings/settings_screen.dart';
 import 'package:flutter/material.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -104,9 +105,10 @@ class AppDrawer extends StatelessWidget {
   }
   
   void _navigateToSettings(BuildContext context) {
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Настройки'), duration: Duration(seconds: 1)),
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const SettingsScreen()),
+      (route) => false,
     );
   }
   

@@ -1,9 +1,9 @@
 {
   "categories": [
-    { "id": "cat_python", "name": "Python", "slug": "python" },
-    { "id": "cat_sql", "name": "SQL", "slug": "sql" },
-    { "id": "cat_js", "name": "JavaScript", "slug": "javascript" },
-    { "id": "cat_html", "name": "HTML", "slug": "html" }
+    { "id": "cat_python", "name": "Python", "slug": "python", "image": "assets/images/python (2).png" },
+    { "id": "cat_sql", "name": "SQL", "slug": "sql", "image": "assets/images/sql (2).png" },
+    { "id": "cat_js", "name": "JavaScript", "slug": "javascript", "image":"assets/images/javascript (2).png" },
+    { "id": "cat_html", "name": "HTML", "slug": "html", "image":"assets/images/html (2).png" }
   ],
   "questions": [
     {

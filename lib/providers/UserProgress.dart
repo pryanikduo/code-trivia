@@ -19,4 +19,11 @@ class UserProgress extends ChangeNotifier{
     await prefs.setInt('total_points', _totalPoints);
     notifyListeners();
   }
+  // userprogress.dart
+  Future<void> resetPoints() async {
+    _totalPoints = 0;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('total_points', 0); // или prefs.remove('total_points')
+    notifyListeners();
+  }
 }
