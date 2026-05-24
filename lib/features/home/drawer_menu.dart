@@ -1,5 +1,8 @@
 import 'package:code_trivia/features/settings/settings_screen.dart';
+import 'package:code_trivia/core/supabase.dart';
 import 'package:flutter/material.dart';
+import 'package:code_trivia/features/authentification/auth_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -8,86 +11,182 @@ class AppDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Drawer(
       backgroundColor: const Color.fromRGBO(33, 40, 68, 1.0), // Тёмный фон
-      child: Column(
-        children: [
-          // Шапка меню (Header)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: const Color.fromRGBO(107, 152, 191, 1.0),
-            ),
-            child: Column(
-              children: [
-                const CircleAvatar(
-                  radius: 40,
-                  backgroundColor: Colors.white,
-                  child: Icon(
-                    Icons.person,
-                    size: 50,
-                    color: Color.fromRGBO(33, 40, 68, 1.0),
+      child: StreamBuilder<AuthState> (
+        stream: supabase.auth.onAuthStateChange,
+        builder: (context, snapshot) {
+          final isLoggedIn = snapshot.data?.session != null ||
+                supabase.auth.currentSession != null;
+          final user = supabase.auth.currentUser;
+
+          return Column(
+            children: [
+              // Шапка меню (Header)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color.fromRGBO(107, 152, 191, 1.0),
+                ),
+                child: Column(
+                  children: [
+                    const CircleAvatar(
+                      radius: 40,
+                      backgroundColor: Colors.white,
+                      child: Icon(
+                        Icons.person,
+                        size: 50,
+                        color: Color.fromRGBO(33, 40, 68, 1.0),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Пряник',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromRGBO(33, 40, 68, 1.0),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'пряник@example.com',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Color.fromRGBO(33, 40, 68, 0.8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  _DrawerItem(
+                    icon: Icons.person,
+                    title: 'Профиль',
+                    onTap: () => _navigateToProfile(context),
                   ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Пряник',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Color.fromRGBO(33, 40, 68, 1.0),
+                  _DrawerItem(
+                    icon: Icons.home,
+                    title: 'Главная',
+                    onTap: () => _navigateToHome(context),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'пряник@example.com',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Color.fromRGBO(33, 40, 68, 0.8),
+                  _DrawerItem(
+                    icon: Icons.leaderboard,
+                    title: 'Лидерборд',
+                    onTap: () => _navigateToLeaderboard(context),
                   ),
-                ),
-              ],
+                  _DrawerItem(
+                    icon: Icons.settings,
+                    title: 'Настройки',
+                    onTap: () => _navigateToSettings(context),
+                  ),
+                  const Divider(color: Colors.grey),
+                  if(isLoggedIn)...[
+                    _DrawerItem(
+                      icon: Icons.logout,
+                      title: 'Выйти',
+                      onTap: () => _showLogoutDialog(context),
+                      color: Colors.redAccent,
+                    ),
+                  ] else ...[
+                    _DrawerItem(
+                      icon: Icons.login,
+                      title: 'Войти',
+                      onTap: () => _navigateToLogin(context),
+                      color: Colors.greenAccent,
+                    ),
+                  ],
+                ],
+              ),
             ),
-          ),
-          
-          // Пункты меню
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                _DrawerItem(
-                  icon: Icons.person,
-                  title: 'Профиль',
-                  onTap: () => _navigateToProfile(context),
-                ),
-                _DrawerItem(
-                  icon: Icons.home,
-                  title: 'Главная',
-                  onTap: () => _navigateToHome(context),
-                ),
-                _DrawerItem(
-                  icon: Icons.leaderboard,
-                  title: 'Лидерборд',
-                  onTap: () => _navigateToLeaderboard(context),
-                ),
-                _DrawerItem(
-                  icon: Icons.settings,
-                  title: 'Настройки',
-                  onTap: () => _navigateToSettings(context),
-                ),
-                const Divider(color: Colors.grey),
-                _DrawerItem(
-                  icon: Icons.logout,
-                  title: 'Выйти',
-                  onTap: () => _showLogoutDialog(context),
-                  color: Colors.redAccent,
-                ),
-              ],
-            ),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
+    //   return Column(
+    //     children: [
+    //       // Шапка меню (Header)
+    //       Container(
+    //         width: double.infinity,
+    //         padding: const EdgeInsets.all(20),
+    //         decoration: BoxDecoration(
+    //           color: const Color.fromRGBO(107, 152, 191, 1.0),
+    //         ),
+    //         child: Column(
+    //           children: [
+    //             const CircleAvatar(
+    //               radius: 40,
+    //               backgroundColor: Colors.white,
+    //               child: Icon(
+    //                 Icons.person,
+    //                 size: 50,
+    //                 color: Color.fromRGBO(33, 40, 68, 1.0),
+    //               ),
+    //             ),
+    //             const SizedBox(height: 12),
+    //             const Text(
+    //               'Пряник',
+    //               style: TextStyle(
+    //                 fontSize: 20,
+    //                 fontWeight: FontWeight.bold,
+    //                 color: Color.fromRGBO(33, 40, 68, 1.0),
+    //               ),
+    //             ),
+    //             const SizedBox(height: 4),
+    //             Text(
+    //               'пряник@example.com',
+    //               style: TextStyle(
+    //                 fontSize: 14,
+    //                 color: Color.fromRGBO(33, 40, 68, 0.8),
+    //               ),
+    //             ),
+    //           ],
+    //         ),
+    //       ),
+          
+    //       // Пункты меню
+    //       Expanded(
+    //         child: ListView(
+    //           padding: EdgeInsets.zero,
+    //           children: [
+    //             _DrawerItem(
+    //               icon: Icons.person,
+    //               title: 'Профиль',
+    //               onTap: () => _navigateToProfile(context),
+    //             ),
+    //             _DrawerItem(
+    //               icon: Icons.home,
+    //               title: 'Главная',
+    //               onTap: () => _navigateToHome(context),
+    //             ),
+    //             _DrawerItem(
+    //               icon: Icons.leaderboard,
+    //               title: 'Лидерборд',
+    //               onTap: () => _navigateToLeaderboard(context),
+    //             ),
+    //             _DrawerItem(
+    //               icon: Icons.settings,
+    //               title: 'Настройки',
+    //               onTap: () => _navigateToSettings(context),
+    //             ),
+    //             const Divider(color: Colors.grey),
+    //             _DrawerItem(
+    //               icon: Icons.logout,
+    //               title: 'Выйти',
+    //               onTap: () => _showLogoutDialog(context),
+    //               color: Colors.redAccent,
+    //             ),
+    //           ],
+    //         ),
+    //       ),
+    //     ],
+    //   ),
+    // );
+  // }
   
   void _navigateToHome(BuildContext context) {
     Navigator.pop(context); // Закрываем меню
@@ -119,6 +218,14 @@ class AppDrawer extends StatelessWidget {
     );
   }
   
+  void _navigateToLogin(BuildContext context) {
+    Navigator.pushAndRemoveUntil(
+      context, 
+      MaterialPageRoute(builder: (_) => const AuthScreen()), 
+      (route) => false,
+    );
+  }
+
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -131,12 +238,19 @@ class AppDrawer extends StatelessWidget {
             child: const Text('Отмена'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async{
               Navigator.pop(context); // Закрываем диалог
-              Navigator.pop(context); // Закрываем меню
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Выход из аккаунта')),
-              );
+              Navigator.pop(context);
+              try{
+                await supabase.auth.signOut();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Вы вышли из аккаунта')),
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Ошибка выхода')),
+                );
+              }// Закрываем меню
             },
             child: const Text('Выйти', style: TextStyle(color: Colors.red)),
           ),

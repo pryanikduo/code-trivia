@@ -1,0 +1,198 @@
+import 'package:code_trivia/core/supabase_auth.dart';
+import 'package:code_trivia/features/authentification/auth_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:code_trivia/features/home/home_screen.dart';
+
+class RegistrationScreen extends StatefulWidget {
+  const RegistrationScreen({super.key});
+
+  @override
+  State<RegistrationScreen> createState() => _RegistrationScreenState();
+}
+
+class _RegistrationScreenState extends State<RegistrationScreen> {
+  final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmController = TextEditingController();
+
+  bool _isLoading = false;
+
+  Future<void> _register() async {
+
+    if(_usernameController.text.trim().isEmpty ||
+      _emailController.text.trim().isEmpty ||
+      _passwordController.text.isEmpty ||
+      _confirmController.text.isEmpty) {
+      _showSnackBar('Пожалуйста, заполните все поля');
+      return;
+    } 
+    if(_passwordController.text != _confirmController.text) {
+      _showSnackBar('Пароли не совпадают');
+      return;
+    }
+    if(_passwordController.text.length < 6) {
+      _showSnackBar('Пароль должен содержать минимум 6 символов');
+      return;
+    } 
+    setState(() => _isLoading = true);
+
+    final error = await SupabaseAuth.signUp(
+      email: _emailController.text.trim(), 
+      password: _passwordController.text,
+      username: _usernameController.text.trim(),
+    );
+
+    setState(() => _isLoading = false);
+
+    if(error == null) {
+      if(mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          (route) => false,
+        );
+      }
+    } else {
+      if(mounted) {
+        _showSnackBar(error, isErrors: true);
+      }
+    }
+  }
+
+  void _showSnackBar(String message, {bool isErrors = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isErrors ? Colors.red : null,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const HomeScreen()),
+              (route) => false,
+            );
+          }, 
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Color.fromRGBO(240, 232, 213, 1.0),
+            size: 28,
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          'Регистрация',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Color.fromRGBO(240, 232, 213, 1.0),
+          ),
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 40),
+              const Text(
+                'Создать аккаунт',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 40),
+              TextField(
+                controller: _usernameController,
+                decoration: const InputDecoration(
+                  labelText: 'Имя пользователя',
+                  border: OutlineInputBorder(), 
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.email), 
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Пароль',
+                  border: OutlineInputBorder(), 
+                  prefixIcon: Icon(Icons.lock),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _confirmController,
+                decoration: const InputDecoration(
+                  labelText: 'Повторите пароль',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.lock_outline), 
+                ),
+              ),
+              const SizedBox(height: 32),
+              ElevatedButton(
+                onPressed: _isLoading ? null : _register, 
+                child: _isLoading
+                  ? const CircularProgressIndicator(color: Colors.white,)
+                  : const Text(
+                      'Зарегистрироваться',
+                      style: TextStyle(
+                        fontSize: 16,
+                      ),
+                    )
+              ),
+              const SizedBox(height: 16),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('Уже есть аккаунт?'),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (_) => const AuthScreen()),
+                        (route) => false,
+                      );
+                    },
+                    child: const Text('Войти'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

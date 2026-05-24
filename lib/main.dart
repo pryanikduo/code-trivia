@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/theme.dart';
 import 'features/welcome/welcome_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; 
 
 Future<void> main() async {                                   // ← сделать async
   WidgetsFlutterBinding.ensureInitialized();                  // ← добавить (для асинхронности)
@@ -14,6 +15,11 @@ Future<void> main() async {                                   // ← сдела�
 
   final settingsProvider = SettingsProvider();
   await settingsProvider.loadSettings();
+
+  await Supabase.initialize(
+    url: 'https://rvjmcgvopkuhfirklthk.supabase.co',
+    anonKey: 'sb_publishable_0B8UJALEtdIPkIsMiBiC6g_cjU3Mq_G',
+  );
 
   runApp(
     MultiProvider(                                            // ← заменить ChangeNotifierProvider на MultiProvider
