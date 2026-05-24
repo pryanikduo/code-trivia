@@ -4,6 +4,8 @@ import 'package:code_trivia/features/home/drawer_menu.dart';
 import 'package:provider/provider.dart';
 import 'package:code_trivia/providers/UserProgress.dart';
 import 'package:code_trivia/features/quiz/quiz_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:code_trivia/core/supabase.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,6 +17,10 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   QuizData? _quizData;
   bool _isLoading = true;
+
+  int _totalScore = 0;
+  int _streak = 0;
+  bool _isLoadingProfile = false;
 
   void initState() {
     super.initState();
@@ -28,6 +34,28 @@ class _HomeScreenState extends State<HomeScreen> {
         _quizData = data;
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _loadUserProfile(String userId) async {
+    try {
+      final data = await supabase
+        .from('profiles')
+        .select('total_score, streak')
+        .eq('id', userId)
+        .single();
+      if(mounted) {
+        setState(() {
+          _totalScore = data['total_score'] ?? 0;
+          _streak = data['streak'] ?? 0;
+        });
+      }
+    } catch (e) {
+      print('Ошибка загрузки профиля: $e');
+    } finally {
+      if(mounted) {
+        setState(() => _isLoadingProfile = false);
+      }
     }
   }
 
@@ -63,136 +91,158 @@ class _HomeScreenState extends State<HomeScreen> {
         ] 
       ),
       endDrawer: const AppDrawer(),
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 100), // Отступ для кнопки
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Приветствие
-                  const Text(
-                    'Привет, пряник!',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromRGBO(240, 232, 213, 1.0),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Готов(а) прокачать свои навыки сегодня?',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Color.fromRGBO(240, 232, 213, 0.8),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 32),
-                  
-                  // Статистика
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: const Color.fromRGBO(240, 232, 213, 1.0),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _StatItem(value: '7', label: 'дней', imgPath: 'assets/images/fire (2).png'),
-                        Container(
-                          width: 2,
-                          height: 40,
-                          color: Colors.grey[400],
+      body: StreamBuilder<AuthState> (
+        stream: supabase.auth.onAuthStateChange,
+        builder: (context, snapshot) {
+          final isLoggedIn = snapshot.data?.session != null ||
+                supabase.auth.currentSession != null;
+          final user = supabase.auth.currentUser;
+          final String displayName = isLoggedIn
+            ? (user?.userMetadata?['username'] as String? ??
+              user?.email?.split('@').first ?? 'Пользователь')
+            : 'Гость';
+
+          if (isLoggedIn && user != null && _totalScore == 0 && !_isLoadingProfile) {
+            _loadUserProfile(user.id);
+          }
+          return Stack(
+            children: [
+              SingleChildScrollView(
+                padding: const EdgeInsets.only(bottom: 100), // Отступ для кнопки
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Приветствие
+                      Text(
+                        'Привет, $displayName!',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Color.fromRGBO(240, 232, 213, 1.0),
                         ),
-                        _StatItem(
-                          value: userProgress.totalPoints.toString(), 
-                          label: 'очков', 
-                          secondImgPath: 'assets/images/cup (2).png'
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        isLoggedIn
+                            ? 'Продолжай в том же духе!'
+                            : 'Войдите, чтобы сохранять прогресс и статистику',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Color.fromRGBO(240, 232, 213, 0.8),
                         ),
-                      ],
-                    ),
+                      ),
+                      
+                      const SizedBox(height: 32),
+                      
+                      // Статистика
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: const Color.fromRGBO(240, 232, 213, 1.0),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _StatItem(
+                              value: _streak.toString(), 
+                              label: 'дней', 
+                              imgPath: 'assets/images/fire (2).png'
+                            ),
+                            Container(
+                              width: 2,
+                              height: 40,
+                              color: Colors.grey[400],
+                            ),
+                            _StatItem(
+                              value: _totalScore.toString(), 
+                              label: 'очков', 
+                              secondImgPath: 'assets/images/cup (2).png'
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 32),
+                      
+                      const Text(
+                        'Категории',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Color.fromRGBO(240, 232, 213, 1.0),
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Сетка категорий
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 1.0, // Квадратные карточки
+                        ),
+                        itemCount: _quizData!.categories.length,
+                        itemBuilder: (context, index) {
+                          // final categories = [{'title': 'Python', 'image': 'assets/images/python (2).png'}, 
+                          // {'title': 'SQL', 'image': 'assets/images/sql (2).png'}, 
+                          // {'title': 'JavaScript', 'image': 'assets/images/javascript (2).png'}, 
+                          // {'title': 'HTML', 'image': 'assets/images/html (2).png'}];
+                          final category = _quizData!.categories[index];
+                          return _CategoryCard(
+                            title: category.name,
+                            imagePath: category.image,
+                            onTap: () => _onCategoryTap(context, category.id),
+                          );
+                        },
+                      ),
+                      
+                      const SizedBox(height: 40), // Дополнительное место внизу
+                    ],
                   ),
-                  
-                  const SizedBox(height: 32),
-                  
-                  const Text(
-                    'Категории',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromRGBO(240, 232, 213, 1.0),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // Сетка категорий
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 1.0, // Квадратные карточки
-                    ),
-                    itemCount: _quizData!.categories.length,
-                    itemBuilder: (context, index) {
-                      // final categories = [{'title': 'Python', 'image': 'assets/images/python (2).png'}, 
-                      // {'title': 'SQL', 'image': 'assets/images/sql (2).png'}, 
-                      // {'title': 'JavaScript', 'image': 'assets/images/javascript (2).png'}, 
-                      // {'title': 'HTML', 'image': 'assets/images/html (2).png'}];
-                      final category = _quizData!.categories[index];
-                      return _CategoryCard(
-                        title: category.name,
-                        imagePath: category.image,
-                        onTap: () => _onCategoryTap(context, category.id),
-                      );
-                    },
-                  ),
-                  
-                  const SizedBox(height: 40), // Дополнительное место внизу
-                ],
+                ),
               ),
-            ),
-          ),
-          
-          // КНОПКА ПОВЕРХ (плавает без фона)
-          Positioned(
-            bottom: 20,
-            left: 20,
-            right: 20,
-            child: SafeArea(
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => _goQuiz(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromRGBO(240, 232, 213, 1.0),
-                    foregroundColor: const Color.fromRGBO(33, 40, 68, 1.0),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 4, // Небольшая тень для кнопки
-                  ),
-                  child: const Text(
-                    'Начать ежедневный квиз',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+              
+              // КНОПКА ПОВЕРХ (плавает без фона)
+              Positioned(
+                bottom: 20,
+                left: 20,
+                right: 20,
+                child: SafeArea(
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => _goQuiz(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromRGBO(240, 232, 213, 1.0),
+                        foregroundColor: const Color.fromRGBO(33, 40, 68, 1.0),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 4, // Небольшая тень для кнопки
+                      ),
+                      child: const Text(
+                        'Начать ежедневный квиз',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
