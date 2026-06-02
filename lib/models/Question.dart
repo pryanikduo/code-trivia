@@ -1,43 +1,34 @@
-import 'Answer.dart';
-import 'Category.dart';
-
-class Question{
-  String id;
-  String categoryId;
-  String questionText;
-  String explanation;
-  int points;
-  String difficulty;
-
-  Category? category;
-  List<Answer> answers = [];
+class Question {
+  final int id;
+  final String categoryId;
+  final int difficultyId;
+  final String questionText;
+  final List<String> options;
+  final int correctOptionIndex;
+  final String explanation;
+  final int pointsMultiplier;
 
   Question({
     required this.id,
     required this.categoryId,
-    required this.questionText, 
-    required this.explanation, 
-    required this.points,
-    required this.difficulty,
+    required this.difficultyId,
+    required this.questionText,
+    required this.options,
+    required this.correctOptionIndex,
+    required this.explanation,
+    this.pointsMultiplier = 1,
   });
 
-  factory Question.fromJson(Map<String, dynamic> json){
+  factory Question.fromJson(Map<String, dynamic> json) {
     return Question(
-      id: json['id'] as String,
-      categoryId: json['category_id'] as String,
-      questionText: json['question_text'] as String, 
-      explanation: json['explanation'] as String, 
-      points: json['points'] as int,
-      difficulty: json['difficulty'] as String,
+      id: json['id'] as int? ?? 0,
+      categoryId: json['category_id']?.toString() ?? '',
+      difficultyId: json['difficulty_id'] as int? ?? 1,
+      questionText: json['text']?.toString() ?? '',
+      options: (json['options'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
+      correctOptionIndex: json['correct_option'] as int? ?? 0,
+      explanation: json['explanation']?.toString() ?? '',
+      pointsMultiplier: json['points_multiplier'] as int? ?? 1,   
     );
   }
-
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'category_id': categoryId,
-    'question_text': questionText,
-    'explanation': explanation,
-    'points': points,
-    'difficulty': difficulty,
-  };
 }

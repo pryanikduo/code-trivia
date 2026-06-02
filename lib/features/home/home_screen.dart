@@ -1,8 +1,9 @@
 import 'package:code_trivia/repository/QuizRepository.dart';
+import 'package:code_trivia/models/Category.dart';
 import 'package:flutter/material.dart';
 import 'package:code_trivia/features/home/drawer_menu.dart';
-import 'package:provider/provider.dart';
-import 'package:code_trivia/providers/UserProgress.dart';
+// import 'package:provider/provider.dart';
+// import 'package:code_trivia/providers/UserProgress.dart';
 import 'package:code_trivia/features/quiz/quiz_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:code_trivia/core/supabase.dart';
@@ -15,25 +16,32 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  QuizData? _quizData;
+  List<Category> _categories = [];
   bool _isLoading = true;
 
   int _totalScore = 0;
   int _streak = 0;
   bool _isLoadingProfile = false;
 
+  String? _previousUserId;
+
   void initState() {
     super.initState();
-    _loadData();
+    _loadInitialData();
   }
 
-  Future<void> _loadData() async {
-    final data = await QuizRepository.loadQuizData();
-    if(mounted){
-      setState(() {
-        _quizData = data;
-        _isLoading = false;
-      });
+  Future<void> _loadInitialData() async {
+    try {
+      final categories = await QuizRepository.loadCategories();
+      if(mounted){
+        setState(() {
+          _categories = categories;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Ошибка загрузки данных: $e');
+      if(mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -61,8 +69,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final userProgress = context.watch<UserProgress>();
-    if (!userProgress.isInitialized || _isLoading) return CircularProgressIndicator();
+    // final userProgress = context.watch<UserProgress>();
+    // if (!userProgress.isInitialized || _isLoading) return CircularProgressIndicator();
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -97,14 +110,38 @@ class _HomeScreenState extends State<HomeScreen> {
           final isLoggedIn = snapshot.data?.session != null ||
                 supabase.auth.currentSession != null;
           final user = supabase.auth.currentUser;
+          final currentUserId = user?.id;
+          
+          if (_previousUserId != currentUserId) {
+            _previousUserId = currentUserId;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                setState(() {
+                  _totalScore = 0;
+                  _streak = 0;
+                  _isLoadingProfile = false;
+                });
+                if (isLoggedIn && user != null) {
+                  setState(() => _isLoadingProfile = true);
+                  _loadUserProfile(user.id);
+                }
+              }
+            });
+          }
+          else if (isLoggedIn && user != null && _totalScore == 0 && !_isLoadingProfile) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                setState(() => _isLoadingProfile = true);
+                _loadUserProfile(user.id);
+              }
+            });
+          }
           final String displayName = isLoggedIn
             ? (user?.userMetadata?['username'] as String? ??
               user?.email?.split('@').first ?? 'Пользователь')
             : 'Гость';
 
-          if (isLoggedIn && user != null && _totalScore == 0 && !_isLoadingProfile) {
-            _loadUserProfile(user.id);
-          }
+
           return Stack(
             children: [
               SingleChildScrollView(
@@ -189,13 +226,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           mainAxisSpacing: 12,
                           childAspectRatio: 1.0, // Квадратные карточки
                         ),
-                        itemCount: _quizData!.categories.length,
+                        itemCount: _categories.length,
                         itemBuilder: (context, index) {
-                          // final categories = [{'title': 'Python', 'image': 'assets/images/python (2).png'}, 
-                          // {'title': 'SQL', 'image': 'assets/images/sql (2).png'}, 
-                          // {'title': 'JavaScript', 'image': 'assets/images/javascript (2).png'}, 
-                          // {'title': 'HTML', 'image': 'assets/images/html (2).png'}];
-                          final category = _quizData!.categories[index];
+                          final category = _categories[index];
                           return _CategoryCard(
                             title: category.name,
                             imagePath: category.image,
@@ -219,7 +252,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () => _goQuiz(context),
+                      onPressed: () => _goDailyQuiz(context),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color.fromRGBO(240, 232, 213, 1.0),
                         foregroundColor: const Color.fromRGBO(33, 40, 68, 1.0),
@@ -247,16 +280,30 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _goQuiz(BuildContext context) async {
+  void _goDailyQuiz(BuildContext context) async {
     showDialog(
-      context: context, 
-      builder: (BuildContext context) {return CircularProgressIndicator();}
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
     );
-    final quizData = await QuizRepository.loadQuizData();
-    Navigator.pop(context);
-    final questions = quizData.questions.toList()..shuffle();
-    final selected = questions.take(5).toList();
-    Navigator.push(context, MaterialPageRoute(builder: (_) => QuizScreen(questions: selected)));
+    try {
+      final questions = await QuizRepository.loadDailyQuiz(limit: 5);
+
+      if(questions.isEmpty){
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Не удалось загрузить вопросы')),
+        );
+        return;
+      }
+      Navigator.pop(context);
+      Navigator.push(context, MaterialPageRoute(builder: (_) => QuizScreen(questions: questions)));
+    } catch (e) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка: $e')),
+      );
+    }
   }
 
   void _onCategoryTap (BuildContext context, String categoryId){
@@ -303,19 +350,26 @@ class _HomeScreenState extends State<HomeScreen> {
       barrierDismissible: false,
       builder: (BuildContext context) {return CircularProgressIndicator();}
     );
-    final quizData = await QuizRepository.loadQuizData();
-    Navigator.pop(context);
-    final filteredQuestions = quizData.questions.where((q) =>
-      q.categoryId == categoryId && q.difficulty == difficulty).toList();
-    if(filteredQuestions.isEmpty){
-      ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Нет вопросов для выбранной сложности')),
+    try {
+      final questions = await QuizRepository.loadQuestions(
+        categoryId: categoryId,
+        difficulty: difficulty,
       );
-      return;
+      if(questions.isEmpty){
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Нет вопросов для выбранной сложности')),
+        );
+        return;
+      }
+      Navigator.pop(context);
+      Navigator.push(context, MaterialPageRoute(builder: (_) => QuizScreen(questions: questions)));
+    } catch (e) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка загрузки вопросов: $e')),
+      );
     }
-    final shuffled = filteredQuestions.toList()..shuffle();
-    final selected = shuffled.take(5).toList();
-    Navigator.push(context, MaterialPageRoute(builder: (_) => QuizScreen(questions: selected)));
   }
 }
 
@@ -377,10 +431,12 @@ class _StatItem extends StatelessWidget {
 // Компонент карточки категории
 class _CategoryCard extends StatelessWidget {
   final String title;
-  final String imagePath;
+  final String? imagePath;
   final VoidCallback onTap;
 
-  const _CategoryCard({required this.title, required this.imagePath, required this.onTap});
+  const _CategoryCard({required this.title, 
+  this.imagePath, 
+  required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -395,12 +451,12 @@ class _CategoryCard extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(
-              imagePath,
-              width: 60,
-              height: 60,
-              fit: BoxFit.contain
-            ),
+            // Image.asset(
+            //   imagePath,
+            //   width: 60,
+            //   height: 60,
+            //   fit: BoxFit.contain
+            // ),
             const SizedBox(height: 12),
             Text(
               title,

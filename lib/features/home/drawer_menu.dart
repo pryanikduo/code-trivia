@@ -156,30 +156,37 @@ class AppDrawer extends StatelessWidget {
   }
 
   void _showLogoutDialog(BuildContext context) {
+    final scaffoldContext = context; // Сохраняем контекст меню
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Выход'),
         content: const Text('Вы уверены, что хотите выйти?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Отмена'),
           ),
           TextButton(
-            onPressed: () async{
-              Navigator.pop(context); // Закрываем диалог
-              Navigator.pop(context);
-              try{
+            onPressed: () async {
+              // Закрываем диалог
+              Navigator.pop(dialogContext);
+              // Закрываем меню
+              Navigator.pop(scaffoldContext);
+              try {
                 await supabase.auth.signOut();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Вы вышли из аккаунта')),
-                );
+                if (scaffoldContext.mounted) {
+                  ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                    const SnackBar(content: Text('Вы вышли из аккаунта')),
+                  );
+                }
               } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Ошибка выхода')),
-                );
-              }// Закрываем меню
+                if (scaffoldContext.mounted) {
+                  ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                    SnackBar(content: Text('Ошибка выхода: $e')),
+                  );
+                }
+              }
             },
             child: const Text('Выйти', style: TextStyle(color: Colors.red)),
           ),
