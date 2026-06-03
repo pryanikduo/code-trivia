@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:code_trivia/models/Question.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+// import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:code_trivia/core/supabase.dart';
 import 'package:code_trivia/features/result/result_screen.dart';
 import 'package:provider/provider.dart';
@@ -254,18 +254,18 @@ class _QuizScreenState extends State<QuizScreen> {
                           final isSelected = _selectedIndex == index;
                           final isCorrect = _isAnswered && index == currentQuestion.correctOptionIndex;
                           final isWrong = _isAnswered && isSelected && !isCorrect;
-                          // Определяем цвет фона для варианта ответа
-                          // Color? tileColor;
-                          // if (_isAnswered) {
-                          //   if (answer.isCorrect) {
-                          //     tileColor = Colors.green.shade100;
-                          //   } else if (answer.id == _selectedAnswerId) {
-                          //     tileColor = Colors.red.shade100;
-                          //   }
-                          // }
                           return ListTile(
-                            title: Text(currentQuestion.options[index]),
+                            title: Text(
+                              currentQuestion.options[index],
+                              style: TextStyle(
+                                color: Color.fromRGBO(33, 40, 68, 1.0),
+                                fontSize: 16,
+                              ),
+                            ),
                             leading: Radio<int>(
+                              fillColor: MaterialStateProperty.resolveWith((states) {
+                                return Color.fromRGBO(33, 40, 68, 1.0); // цвет по умолчанию
+                              }),
                               value: index,
                               groupValue: _selectedIndex,
                               onChanged: _isAnswered ? null : (val) => _onAnswerSelected(val!),
@@ -276,7 +276,6 @@ class _QuizScreenState extends State<QuizScreen> {
                         },
                       ),
                     ),
-                    // Показываем объяснение, если ответ выбран
                     if (_isAnswered && currentQuestion.explanation.isNotEmpty)
                       Container(
                         padding: const EdgeInsets.all(16),
@@ -308,7 +307,7 @@ class _QuizScreenState extends State<QuizScreen> {
                         ),
                       ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 56),
 
                     SizedBox(
                       width: double.infinity,
@@ -321,7 +320,10 @@ class _QuizScreenState extends State<QuizScreen> {
                           _currentIndex + 1 == widget.questions.length 
                               ? 'Завершить квиз' 
                               : 'Далее',
-                          style: const TextStyle(fontSize: 16),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Color.fromRGBO(33, 40, 68, 1.0),
+                          ),
                         ),
                       ),
                     ),

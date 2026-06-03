@@ -127,7 +127,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 controller: _usernameController,
                 decoration: const InputDecoration(
                   labelText: 'Имя пользователя',
-                  border: OutlineInputBorder(), 
+                  floatingLabelStyle: TextStyle(color: Color.fromRGBO(171, 253, 195, 1.0),),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color.fromRGBO(240, 232, 213, 1.0)),
+                  ), 
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color.fromRGBO(171, 253, 195, 1.0)),
+                  ),
+                  prefixIcon: Icon(Icons.person,), 
                 ),
               ),
               const SizedBox(height: 16),
@@ -136,7 +143,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(
                   labelText: 'Email',
-                  border: OutlineInputBorder(),
+                  floatingLabelStyle: TextStyle(color: Color.fromRGBO(171, 253, 195, 1.0),),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color.fromRGBO(240, 232, 213, 1.0)),
+                  ), 
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color.fromRGBO(171, 253, 195, 1.0)),
+                  ),
                   prefixIcon: Icon(Icons.email), 
                 ),
               ),
@@ -146,7 +159,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 obscureText: true,
                 decoration: const InputDecoration(
                   labelText: 'Пароль',
-                  border: OutlineInputBorder(), 
+                  floatingLabelStyle: TextStyle(color: Color.fromRGBO(171, 253, 195, 1.0),),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color.fromRGBO(240, 232, 213, 1.0)),
+                  ), 
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color.fromRGBO(171, 253, 195, 1.0)),
+                  ),
                   prefixIcon: Icon(Icons.lock),
                 ),
               ),
@@ -155,7 +174,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 controller: _confirmController,
                 decoration: const InputDecoration(
                   labelText: 'Повторите пароль',
-                  border: OutlineInputBorder(),
+                  floatingLabelStyle: TextStyle(color: Color.fromRGBO(171, 253, 195, 1.0),),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color.fromRGBO(240, 232, 213, 1.0)),
+                  ), 
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color.fromRGBO(171, 253, 195, 1.0)),
+                  ),
                   prefixIcon: Icon(Icons.lock_outline), 
                 ),
               ),
@@ -167,12 +192,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   : const Text(
                       'Зарегистрироваться',
                       style: TextStyle(
+                        color: Color.fromRGBO(33, 40, 68, 1.0),
                         fontSize: 16,
                       ),
                     )
               ),
-              const SizedBox(height: 16),
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -185,7 +209,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         (route) => false,
                       );
                     },
-                    child: const Text('Войти'),
+                    child: const Text(
+                      'Войти',
+                      style: TextStyle(
+                        color: Color.fromRGBO(240, 232, 213, 1.0),
+                      )
+                    ),
                   ),
                 ],
               ),

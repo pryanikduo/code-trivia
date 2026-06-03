@@ -2,8 +2,6 @@ import 'package:code_trivia/repository/QuizRepository.dart';
 import 'package:code_trivia/models/Category.dart';
 import 'package:flutter/material.dart';
 import 'package:code_trivia/features/home/drawer_menu.dart';
-// import 'package:provider/provider.dart';
-// import 'package:code_trivia/providers/UserProgress.dart';
 import 'package:code_trivia/features/quiz/quiz_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:code_trivia/core/supabase.dart';
@@ -69,8 +67,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // final userProgress = context.watch<UserProgress>();
-    // if (!userProgress.isInitialized || _isLoading) return CircularProgressIndicator();
     if (_isLoading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -224,26 +220,24 @@ class _HomeScreenState extends State<HomeScreen> {
                           crossAxisCount: 2,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
-                          childAspectRatio: 1.0, // Квадратные карточки
+                          childAspectRatio: 1.0,
                         ),
                         itemCount: _categories.length,
                         itemBuilder: (context, index) {
                           final category = _categories[index];
                           return _CategoryCard(
                             title: category.name,
-                            imagePath: category.image,
+                            imagePath: getCategoryImagePath(category.name),
                             onTap: () => _onCategoryTap(context, category.id),
                           );
                         },
                       ),
-                      
-                      const SizedBox(height: 40), // Дополнительное место внизу
+                      const SizedBox(height: 40), 
                     ],
                   ),
                 ),
               ),
               
-              // КНОПКА ПОВЕРХ (плавает без фона)
               Positioned(
                 bottom: 20,
                 left: 20,
@@ -260,7 +254,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        elevation: 4, // Небольшая тень для кнопки
+                        elevation: 4, 
                       ),
                       child: const Text(
                         'Начать ежедневный квиз',
@@ -309,7 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onCategoryTap (BuildContext context, String categoryId){
     showDialog(
       context: context,
-      builder: (dialogContext) {          // dialogContext — контекст диалога, не главного экрана
+      builder: (dialogContext) {          
         return AlertDialog(
           title: Text('Выберите сложность'),
           content: Column(
@@ -318,9 +312,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ListTile(
                 title: Text('Лёгкая'),
                 onTap: () {
-                  // У нас есть доступ к categoryId из внешней области
                   _startQuiz(context, categoryId, 'easy');
-                  Navigator.pop(dialogContext); // закрыть диалог
+                  Navigator.pop(dialogContext); 
                 },
               ),
               ListTile(
@@ -371,9 +364,22 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
   }
+  String getCategoryImagePath(String categoryName) {
+    switch(categoryName) {
+      case 'SQL':
+        return 'assets/images/sql (2).png';
+      case 'HTML':
+        return 'assets/images/html (2).png';
+      case 'JavaScript':
+        return 'assets/images/javascript (2).png';
+      case 'Python':
+        return 'assets/images/python (2).png';
+      default:
+        return 'assets/images/default.png';
+    }
+  }
 }
 
-// Компонент статистики
 class _StatItem extends StatelessWidget {
   final String value;
   final String label;
@@ -431,11 +437,11 @@ class _StatItem extends StatelessWidget {
 // Компонент карточки категории
 class _CategoryCard extends StatelessWidget {
   final String title;
-  final String? imagePath;
+  final String imagePath;
   final VoidCallback onTap;
 
   const _CategoryCard({required this.title, 
-  this.imagePath, 
+  required this.imagePath, 
   required this.onTap});
 
   @override
@@ -451,12 +457,12 @@ class _CategoryCard extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Image.asset(
-            //   imagePath,
-            //   width: 60,
-            //   height: 60,
-            //   fit: BoxFit.contain
-            // ),
+            Image.asset(
+              imagePath,
+              width: 60,
+              height: 60,
+              fit: BoxFit.contain
+            ),
             const SizedBox(height: 12),
             Text(
               title,

@@ -80,18 +80,44 @@ class _AuthScreenState extends State<AuthScreen> {
             ),
             TextField(
               controller: emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
+              decoration: const InputDecoration(
+                  labelText: 'Email',
+                  floatingLabelStyle: TextStyle(color: Color.fromRGBO(171, 253, 195, 1.0),),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color.fromRGBO(240, 232, 213, 1.0)),
+                  ), 
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color.fromRGBO(171, 253, 195, 1.0)),
+                  ),
+                  prefixIcon: Icon(Icons.email), 
+                ),
             ),
+            const SizedBox(height: 16),
             TextField(
               controller: passwordController,
-              decoration: const InputDecoration(labelText: 'Пароль'),
+              decoration: const InputDecoration(
+                  labelText: 'Пароль',
+                  floatingLabelStyle: TextStyle(color: Color.fromRGBO(171, 253, 195, 1.0),),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color.fromRGBO(240, 232, 213, 1.0)),
+                  ), 
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color.fromRGBO(171, 253, 195, 1.0)),
+                  ),
+                  prefixIcon: Icon(Icons.lock),
+                ),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: isLoading ? null : _login, 
               child: isLoading
                 ? const CircularProgressIndicator()
-                : const Text('Войти'),
+                : const Text(
+                  'Войти',
+                  style: TextStyle(
+                    color: Color.fromRGBO(33, 40, 68, 1.0),
+                  ),
+                ),
             ),
             TextButton(
               onPressed: () {
@@ -101,7 +127,12 @@ class _AuthScreenState extends State<AuthScreen> {
                   (route) => false,
                 );
               }, 
-              child: const Text('Нет аккаунта? Зарегистрироваться'),
+              child: const Text(
+                'Нет аккаунта? Зарегистрироваться',
+                style: TextStyle(
+                  color: Color.fromRGBO(240, 232, 213, 1.0),
+                ),
+              ),
             )
           ],
         )
