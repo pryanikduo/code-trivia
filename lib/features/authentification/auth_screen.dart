@@ -70,14 +70,16 @@ class _AuthScreenState extends State<AuthScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const SizedBox(height: 40),
             Text(
               'Авторизация',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: Color.fromRGBO(33, 40, 68, 1.0),
+                color: Color.fromRGBO(240, 232, 213, 1.0),
               ),
             ),
+            const SizedBox(height: 40),
             TextField(
               controller: emailController,
               decoration: const InputDecoration(

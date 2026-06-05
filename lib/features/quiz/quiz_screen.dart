@@ -20,12 +20,15 @@ class _QuizScreenState extends State<QuizScreen> {
   bool _isAnswered = false;
   int _earnedPoints = 0;
 
+  int _maxPossiblePoints = 0;
+
   final List<int?> _userAnswers = [];
 
   @override
   void initState() {
     super.initState();
     _userAnswers.length = widget.questions.length;
+    _maxPossiblePoints = widget.questions.fold(0, (sum, q) => sum + 10 * q.pointsMultiplier);
   }
 
   @override
@@ -144,7 +147,8 @@ class _QuizScreenState extends State<QuizScreen> {
       MaterialPageRoute(
         builder: (_) => ResultsScreen(
           earnedPoints: _earnedPoints,
-          totalQuestions: widget.questions.length,
+          totalQuestions: widget.questions.length, // можно оставить для статистики
+          maxPoints: _maxPossiblePoints,           // новый параметр
         ),
       ),
     );
@@ -314,16 +318,18 @@ class _QuizScreenState extends State<QuizScreen> {
                       child: ElevatedButton(
                         onPressed: _isAnswered ? _nextQuestion : null,
                         style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromRGBO(33, 40, 68, 1.0),   // фон активной
+                          foregroundColor: const Color.fromRGBO(240, 232, 213, 1.0), // цвет текста активной
+                          disabledBackgroundColor: Colors.grey.shade400,            // фон неактивной
+                          disabledForegroundColor: Colors.grey.shade600,            // цвет текста неактивной
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
                         child: Text(
                           _currentIndex + 1 == widget.questions.length 
                               ? 'Завершить квиз' 
                               : 'Далее',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Color.fromRGBO(33, 40, 68, 1.0),
-                          ),
+                          // Убираем явный color из стиля, чтобы использовался foregroundColor
+                          style: const TextStyle(fontSize: 16),
                         ),
                       ),
                     ),

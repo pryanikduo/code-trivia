@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:code_trivia/providers/settings_provider.dart';
-import 'package:code_trivia/providers/UserProgress.dart';
+// import 'package:code_trivia/providers/UserProgress.dart';
 import 'package:code_trivia/features/home/home_screen.dart';
+import 'package:code_trivia/core/supabase.dart';
+
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -135,28 +137,47 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showResetDialog(BuildContext context) {
-  final userProgress = context.read<UserProgress>();
-  showDialog(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: const Text('Сбросить прогресс'),
-      content: const Text('Все очки и достижения будут удалены без возможности восстановления. Продолжить?'),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Отмена')),
-        TextButton(
-          onPressed: () async {
-            await userProgress.resetPoints();   // вызываем метод сброса
-            Navigator.pop(ctx);
-            ScaffoldMessenger.of(ctx).showSnackBar(
-              const SnackBar(content: Text('Прогресс сброшен')),
-            );
-          },
-          child: const Text('Сбросить', style: TextStyle(color: Colors.red)),
-        ),
-      ],
-    ),
-  );
-}
+    final user = supabase.auth.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Сброс доступен только авторизованным пользователям')),
+      );
+      return;
+    }
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Сброс данных'),
+        content: const Text('Все очки и достижения будут удалены без возможности восстановления. Продолжить?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Отмена')),
+          TextButton(
+            onPressed: () async {
+              await supabase
+                .from('user_answers')
+                .delete()
+                .eq('user_id', user.id);
+              await supabase
+                .from('profiles')
+                .update({
+                  'total_score': 0,
+                  'streak': 0,
+                  'last_quiz_date': null,
+                })
+                .eq('id', user.id);
+              if (ctx.mounted) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(content: Text('Прогресс сброшен')),
+                );
+              }
+              Navigator.pop(ctx);
+            },
+            child: const Text('Сбросить', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
 
     void _openPrivacyPolicy(BuildContext context) {
     showDialog(

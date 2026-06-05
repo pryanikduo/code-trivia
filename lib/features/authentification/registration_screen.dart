@@ -1,4 +1,6 @@
+import 'package:code_trivia/core/supabase.dart';
 import 'package:code_trivia/core/supabase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:code_trivia/features/authentification/auth_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:code_trivia/features/home/home_screen.dart';
@@ -17,6 +19,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final _confirmController = TextEditingController();
 
   bool _isLoading = false;
+  bool _isAgreed = false;
 
   Future<void> _register() async {
 
@@ -43,20 +46,40 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       username: _usernameController.text.trim(),
     );
 
+    if (error != null) {
+      setState(() => _isLoading = false);
+      if (mounted) _showSnackBar(error, isErrors: true);
+      return;
+    }
+
+    final session = Supabase.instance.client.auth.currentSession;
+    final userId = session?.user.id;
+
+    if (userId == null) {
+      setState(() => _isLoading = false);
+      if (mounted) _showSnackBar('Ошибка: не удалось получить ID пользователя', isErrors: true);
+      return;
+    }
+
+    try {
+      await supabase
+        .from('profiles')
+        .update({'username': _usernameController.text.trim()})
+        .eq('id', userId);
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if(mounted) _showSnackBar('Ошибка сохранения профиля: $e', isErrors: true);
+      return;
+    }
+
     setState(() => _isLoading = false);
 
-    if(error == null) {
-      if(mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-          (route) => false,
-        );
-      }
-    } else {
-      if(mounted) {
-        _showSnackBar(error, isErrors: true);
-      }
+    if(mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        (route) => false,
+      );
     }
   }
 
@@ -184,18 +207,35 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   prefixIcon: Icon(Icons.lock_outline), 
                 ),
               ),
+              const SizedBox(height: 16,),
+              Row(children: [
+                Checkbox(
+                  value: _isAgreed, 
+                  onChanged: (bool? newValue) {
+                    setState(() {
+                      _isAgreed = newValue ?? false;
+                    });
+                  }
+                ),
+                const Text(
+                  'Я согласен с правилами и условиями',
+                  style: TextStyle(
+                    color: Color.fromRGBO(240, 232, 213, 1.0),
+                  ),
+                ),
+              ],),
               const SizedBox(height: 32),
               ElevatedButton(
-                onPressed: _isLoading ? null : _register, 
+                onPressed: (_isLoading || !_isAgreed) ? null : _register,
                 child: _isLoading
-                  ? const CircularProgressIndicator(color: Colors.white,)
-                  : const Text(
-                      'Зарегистрироваться',
-                      style: TextStyle(
-                        color: Color.fromRGBO(33, 40, 68, 1.0),
-                        fontSize: 16,
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        'Зарегистрироваться',
+                        style: TextStyle(
+                          color: Color.fromRGBO(33, 40, 68, 1.0),
+                          fontSize: 16,
+                        ),
                       ),
-                    )
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

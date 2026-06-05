@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:code_trivia/features/authentification/auth_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:code_trivia/features/leaderboard/leaderboard_screen.dart';
 import 'dart:io';
 
 class AppDrawer extends StatefulWidget {
@@ -25,7 +26,9 @@ class _AppDrawerState extends State<AppDrawer> {
   Future<void> _loadAvatar() async {
     final user = supabase.auth.currentUser;
     if (user == null) {
-      setState(() => _avatarUrl = null);
+      if (mounted) {
+        setState(() => _avatarUrl = null);
+      }
       return;
     }
 
@@ -35,11 +38,15 @@ class _AppDrawerState extends State<AppDrawer> {
           .select('avatar_url')
           .eq('id', user.id)
           .maybeSingle();
-      setState(() {
-        _avatarUrl = response?['avatar_url'] as String?;
-      });
+      if (mounted) {
+        setState(() {
+          _avatarUrl = response?['avatar_url'] as String?;
+        });
+      }
     } catch (e) {
-      print('Ошибка загрузки аватарки: $e');
+      if (mounted) {
+        print('Ошибка загрузки аватарки: $e');
+      }
     }
   }
 
@@ -120,7 +127,6 @@ class _AppDrawerState extends State<AppDrawer> {
 
           return Column(
             children: [
-              // Шапка меню (без изменений)
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
@@ -192,22 +198,22 @@ class _AppDrawerState extends State<AppDrawer> {
                 child: ListView(
                   padding: EdgeInsets.zero,
                   children: [
-                    _DrawerItem(
-                      icon: Icons.home,
-                      title: 'Главная',
-                      onTap: () => _navigateToHome(context),
-                    ),
-                    _DrawerItem(
-                      icon: Icons.leaderboard,
-                      title: 'Лидерборд',
-                      onTap: () => _navigateToLeaderboard(context),
-                    ),
+                    // _DrawerItem(
+                    //   icon: Icons.home,
+                    //   title: 'Главная',
+                    //   onTap: () => _navigateToHome(context),
+                    // ),
                     if (isLoggedIn) ...[
                       _DrawerItem(
-                        icon: Icons.person,
-                        title: 'Профиль',
-                        onTap: () => _navigateToProfile(context),
+                        icon: Icons.leaderboard,
+                        title: 'Лидерборд',
+                        onTap: () => _navigateToLeaderboard(context),
                       ),
+                      // _DrawerItem(
+                      //   icon: Icons.person,
+                      //   title: 'Профиль',
+                      //   onTap: () => _navigateToProfile(context),
+                      // ),
                       _DrawerItem(
                         icon: Icons.settings,
                         title: 'Настройки',
@@ -221,7 +227,7 @@ class _AppDrawerState extends State<AppDrawer> {
                         color: Colors.redAccent,
                       ),
                     ] else ...[
-                      const Divider(color: Colors.grey),
+                      // const Divider(color: Colors.grey),
                       _DrawerItem(
                         icon: Icons.login,
                         title: 'Войти',
@@ -239,19 +245,20 @@ class _AppDrawerState extends State<AppDrawer> {
     );
   }
 
-  void _navigateToHome(BuildContext context) {
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Главная'), duration: Duration(seconds: 1)),
-    );
-  }
+  // void _navigateToHome(BuildContext context) {
+  //   Navigator.pop(context);
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     const SnackBar(content: Text('Главная'), duration: Duration(seconds: 1)),
+  //   );
+  // }
 
   void _navigateToLeaderboard(BuildContext context) {
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Лидерборд'), duration: Duration(seconds: 1)),
-    );
-  }
+  Navigator.pop(context); // закрыть меню
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (_) => const LeaderboardScreen()),
+  );
+}
 
   void _navigateToSettings(BuildContext context) {
     Navigator.pushAndRemoveUntil(
@@ -261,12 +268,12 @@ class _AppDrawerState extends State<AppDrawer> {
     );
   }
 
-  void _navigateToProfile(BuildContext context) {
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Профиль'), duration: Duration(seconds: 1)),
-    );
-  }
+  // void _navigateToProfile(BuildContext context) {
+  //   Navigator.pop(context);
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     const SnackBar(content: Text('Профиль'), duration: Duration(seconds: 1)),
+  //   );
+  // }
 
   void _navigateToLogin(BuildContext context) {
     Navigator.pushAndRemoveUntil(
