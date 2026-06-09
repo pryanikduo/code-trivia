@@ -318,10 +318,10 @@ class _QuizScreenState extends State<QuizScreen> {
                       child: ElevatedButton(
                         onPressed: _isAnswered ? _nextQuestion : null,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromRGBO(33, 40, 68, 1.0),   // фон активной
-                          foregroundColor: const Color.fromRGBO(240, 232, 213, 1.0), // цвет текста активной
-                          disabledBackgroundColor: Colors.grey.shade400,            // фон неактивной
-                          disabledForegroundColor: Colors.grey.shade600,            // цвет текста неактивной
+                          backgroundColor: const Color.fromRGBO(33, 40, 68, 1.0),   
+                          foregroundColor: const Color.fromRGBO(240, 232, 213, 1.0), 
+                          disabledBackgroundColor: Colors.grey.shade400,            
+                          disabledForegroundColor: Colors.grey.shade600,            
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
                         child: Text(

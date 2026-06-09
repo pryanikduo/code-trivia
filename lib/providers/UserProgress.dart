@@ -26,4 +26,9 @@ class UserProgress extends ChangeNotifier{
     await prefs.setInt('total_points', 0); // или prefs.remove('total_points')
     notifyListeners();
   }
+  Future<int> takeGuestPoints() async {
+    final points = _totalPoints;
+    await resetPoints(); 
+    return points;
+  }
 }

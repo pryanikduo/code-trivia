@@ -21,23 +21,29 @@ class QuizRepository {
   static Future<List<Question>> loadQuestions({
     required String categoryId,
     required String difficulty,
+    int limit = 10,
   }) async {
     try {
       final difficultyId = _getDifficultyId(difficulty);
 
       final response = await supabase
-          .from('questions')
-          .select('*, difficulty_levels!inner(points_multiplier)')
-          .eq('category_id', categoryId)
-          .eq('difficulty_id', difficultyId);
+        .from('questions')
+        .select('*, difficulty_levels!inner(points_multiplier)')
+        .eq('category_id', categoryId)
+        .eq('difficulty_id', difficultyId)
+        .limit(limit * 2);
 
-      return response.map<Question>((json) {
+      
+
+      var questions = response.map<Question>((json) {
         final diffData = json['difficulty_levels'] as Map<String, dynamic>?;
         return Question.fromJson({
           ...json,
           'points_multiplier': diffData?['points_multiplier'] ?? 1,
         });
       }).toList();
+      questions.shuffle();
+      return questions.take(limit).toList();
     } catch (e) {
       print('Ошибка загрузки вопросов: $e');
       return [];
@@ -48,7 +54,7 @@ class QuizRepository {
     final response = await supabase
         .from('questions')
         .select('*, difficulty_levels!inner(points_multiplier)')
-        .limit(20);
+        .limit(20*2);
 
     final allQuestions = response.map<Question>((json) {
       final diffData = json['difficulty_levels'] as Map<String, dynamic>?;

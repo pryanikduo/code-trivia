@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:code_trivia/repository/QuizRepository.dart';
 import 'package:code_trivia/models/Category.dart';
 import 'package:flutter/material.dart';
@@ -5,6 +6,8 @@ import 'package:code_trivia/features/home/drawer_menu.dart';
 import 'package:code_trivia/features/quiz/quiz_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:code_trivia/core/supabase.dart';
+import 'package:provider/provider.dart';
+import 'package:code_trivia/providers/UserProgress.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,9 +26,78 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String? _previousUserId;
 
+  late final StreamSubscription<AuthState> _authSubscription;
+
   void initState() {
     super.initState();
     _loadInitialData();
+    _listenToAuthChanges();
+  }
+
+  void _listenToAuthChanges() {
+    _authSubscription = supabase.auth.onAuthStateChange.listen((event) async {
+      if (event.event == AuthChangeEvent.signedIn) {
+        // Пользователь только что вошёл или зарегистрировался
+        await _transferGuestPointsToUser(event.session?.user);
+      }
+    });
+  }
+
+  Future<void> _transferGuestPointsToUser(User? user) async {
+    if (user == null) return;
+
+    // Получаем провайдер UserProgress
+    final userProgress = context.read<UserProgress>();
+    final guestPoints = userProgress.totalPoints;
+
+    if (guestPoints == 0) return; // нечего переносить
+
+    try {
+      // Показываем индикатор загрузки (опционально)
+      // Загружаем текущий total_score пользователя
+      final profileData = await supabase
+          .from('profiles')
+          .select('total_score')
+          .eq('id', user.id)
+          .maybeSingle(); // используем maybeSingle, чтобы не было ошибки, если профиля нет
+
+      final currentScore = profileData?['total_score'] as int? ?? 0;
+      final newScore = currentScore + guestPoints;
+
+      // Обновляем профиль
+      await supabase.from('profiles').upsert({
+        'id': user.id,
+        'total_score': newScore,
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+
+      // Сбрасываем локальные очки гостя
+      await userProgress.resetPoints();
+
+      // Обновляем состояние в HomeScreen (чтобы сразу показать новые очки)
+      if (mounted) {
+        setState(() {
+          _totalScore = newScore;
+          // серию оставляем как есть (она уже загрузится из профиля при следующей загрузке)
+        });
+        // Можно также принудительно перезагрузить профиль, чтобы обновить streak и т.д.
+        _loadUserProfile(user.id);
+      }
+
+      // Показать уведомление об успешном переносе
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ваши очки гостя ($guestPoints) добавлены к аккаунту!')),
+        );
+      }
+    } catch (e) {
+      print('Ошибка переноса очков: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Не удалось перенести очки. Обратитесь в поддержку.')),
+        );
+      }
+    }
   }
 
   Future<void> _loadInitialData() async {
@@ -63,6 +135,12 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() => _isLoadingProfile = false);
       }
     }
+  }
+
+  @override
+  void dispose() {
+    _authSubscription.cancel();
+    super.dispose();
   }
 
   @override
@@ -108,6 +186,11 @@ class _HomeScreenState extends State<HomeScreen> {
           final user = supabase.auth.currentUser;
           final currentUserId = user?.id;
           
+          final guestPoints = context.watch<UserProgress>().totalPoints;
+
+          final displayedPoints = isLoggedIn ? _totalScore : guestPoints;
+          final displayedStreak = isLoggedIn ? _streak : 0;
+
           if (_previousUserId != currentUserId) {
             _previousUserId = currentUserId;
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -181,7 +264,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             _StatItem(
-                              value: _streak.toString(), 
+                              value: displayedStreak.toString(), 
                               label: 'дней', 
                               imgPath: 'assets/images/fire (2).png'
                             ),
@@ -191,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               color: Colors.grey[400],
                             ),
                             _StatItem(
-                              value: _totalScore.toString(), 
+                              value: displayedPoints.toString(), 
                               label: 'очков', 
                               secondImgPath: 'assets/images/cup (2).png'
                             ),
