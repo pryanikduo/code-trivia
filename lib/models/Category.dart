@@ -1,21 +1,19 @@
 class Category {
-  String id;
-  String name;
-  String slug;
+  final String id;
+  final String name;
+  final String? image;
 
-  Category({required this.id,required this.name, required this.slug});
+  Category({
+    required this.id,
+    required this.name,
+    this.image,
+  });
 
-  factory Category.fromJson(Map<String, dynamic> json){
+  factory Category.fromJson(Map<String, dynamic> json) {
     return Category(
-      id: json['id'] as String,
-      name: json['name'] as String, 
-      slug: json['slug'] as String
+      id: json['id']?.toString() ?? '',           // Защита от null и int
+      name: json['name']?.toString() ?? 'Без названия',
+      image: json['image']?.toString(),
     );
   }
-
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'slug': slug
-  };
 }

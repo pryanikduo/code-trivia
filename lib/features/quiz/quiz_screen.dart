@@ -1,10 +1,10 @@
-import 'package:code_trivia/providers/UserProgress.dart';
 import 'package:flutter/material.dart';
 import 'package:code_trivia/models/Question.dart';
-import 'package:code_trivia/models/Answer.dart';
-// import 'package:code_trivia/repository/QuizRepository.dart';
-import 'package:provider/provider.dart';
+// import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:code_trivia/core/supabase.dart';
 import 'package:code_trivia/features/result/result_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:code_trivia/providers/UserProgress.dart';
 
 class QuizScreen extends StatefulWidget {
   final List<Question> questions;
@@ -16,13 +16,19 @@ class QuizScreen extends StatefulWidget {
 
 class _QuizScreenState extends State<QuizScreen> {
   int _currentIndex = 0;
-  String? _selectedAnswerId;
+  int? _selectedIndex;
   bool _isAnswered = false;
   int _earnedPoints = 0;
+
+  int _maxPossiblePoints = 0;
+
+  final List<int?> _userAnswers = [];
 
   @override
   void initState() {
     super.initState();
+    _userAnswers.length = widget.questions.length;
+    _maxPossiblePoints = widget.questions.fold(0, (sum, q) => sum + 10 * q.pointsMultiplier);
   }
 
   @override
@@ -31,13 +37,22 @@ class _QuizScreenState extends State<QuizScreen> {
     super.dispose();
   }
 
-  void _onAnswerSelected(Answer answer) {
+  void _onAnswerSelected(int index) {
+    if (_isAnswered) return;
+
     setState(() {
-      _selectedAnswerId = answer.id;
+      _selectedIndex = index;
       _isAnswered = true;
-      if(answer.isCorrect){
-        _earnedPoints += widget.questions[_currentIndex].points;
+
+      final currentQuestion = widget.questions[_currentIndex];
+      final isCorrect = index == currentQuestion.correctOptionIndex;
+
+      if (isCorrect) {
+        final pointsForThisQuestion = 10 * currentQuestion.pointsMultiplier; // ← Вот так!
+        _earnedPoints += pointsForThisQuestion;
       }
+
+      _userAnswers[_currentIndex] = index;
     });
   }
 
@@ -45,23 +60,100 @@ class _QuizScreenState extends State<QuizScreen> {
     if(_currentIndex + 1 < widget.questions.length){
       setState(() {
         _currentIndex++;
-        _selectedAnswerId = null;
+        _selectedIndex = null;
         _isAnswered = false;
       });
     } else {
-      context.read<UserProgress>().addPoints(_earnedPoints);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ResultsScreen(
-            earnedPoints: _earnedPoints,
-            totalQuestions: widget.questions.length,
-          ),
-        ),
-      );
+      _finishQuiz();
     }
   }
   
+  // ВРЕМЕННО (наверное), если что заменить на код из вк
+  Future<void> _finishQuiz() async {
+    final user = supabase.auth.currentUser;
+
+    if (user == null) {
+      context.read<UserProgress>().addPoints(_earnedPoints);
+      _navigateToResults();
+      return;
+    }
+
+    try {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+
+      // 1. Сохраняем историю ответов
+      final List<Map<String, dynamic>> answersToSave = [];
+
+      for (int i = 0; i < widget.questions.length; i++) {
+        final question = widget.questions[i];
+        final selectedIndex = _userAnswers[i];
+        final isCorrect = selectedIndex == question.correctOptionIndex;
+        final pointsEarned = isCorrect ? (10 * question.pointsMultiplier) : 0;
+
+        answersToSave.add({
+          'user_id': user.id,
+          'question_id': question.id,
+          'is_correct': isCorrect,
+          'points_earned': pointsEarned,
+        });
+      }
+
+      if (answersToSave.isNotEmpty) {
+        await supabase.from('user_answers').insert(answersToSave);
+      }
+
+      // 2. Получаем текущий total_score
+      final profileData = await supabase
+          .from('profiles')
+          .select('total_score')
+          .eq('id', user.id)
+          .single();
+
+      final currentTotalScore = profileData['total_score'] as int? ?? 0;
+      final newTotalScore = currentTotalScore + _earnedPoints;
+
+      // 3. Обновляем профиль
+      await supabase
+          .from('profiles')
+          .update({
+            'total_score': newTotalScore,
+            'last_quiz_date': DateTime.now().toIso8601String().split('T')[0],
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', user.id);
+
+      if (mounted) Navigator.pop(context); // закрываем лоадер
+
+      _navigateToResults();
+    } catch (e) {
+      print('Ошибка сохранения результатов: $e');
+      if (mounted) Navigator.pop(context);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Результат сохранён локально, но не в базу')),
+      );
+
+      _navigateToResults();
+    }
+  }
+
+  void _navigateToResults() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ResultsScreen(
+          earnedPoints: _earnedPoints,
+          totalQuestions: widget.questions.length, // можно оставить для статистики
+          maxPoints: _maxPossiblePoints,           // новый параметр
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentQuestion = widget.questions[_currentIndex];
@@ -161,57 +253,83 @@ class _QuizScreenState extends State<QuizScreen> {
                     const SizedBox(height: 24),
                     Expanded(
                       child: ListView.builder(
-                        itemCount: currentQuestion.answers.length,
+                        itemCount: currentQuestion.options.length,
                         itemBuilder: (context, index) {
-                          final answer = currentQuestion.answers[index];
-                          // Определяем цвет фона для варианта ответа
-                          Color? tileColor;
-                          if (_isAnswered) {
-                            if (answer.isCorrect) {
-                              tileColor = Colors.green.shade100;
-                            } else if (answer.id == _selectedAnswerId) {
-                              tileColor = Colors.red.shade100;
-                            }
-                          }
+                          final isSelected = _selectedIndex == index;
+                          final isCorrect = _isAnswered && index == currentQuestion.correctOptionIndex;
+                          final isWrong = _isAnswered && isSelected && !isCorrect;
                           return ListTile(
-                            tileColor: tileColor,
                             title: Text(
-                              answer.answerText,
-                              style: const TextStyle(
+                              currentQuestion.options[index],
+                              style: TextStyle(
                                 color: Color.fromRGBO(33, 40, 68, 1.0),
+                                fontSize: 16,
                               ),
                             ),
-                            leading: Radio<String>(
-                              value: answer.id,
-                              groupValue: _selectedAnswerId,
-                              onChanged: _isAnswered ? null : (value) => _onAnswerSelected(answer),
+                            leading: Radio<int>(
+                              fillColor: MaterialStateProperty.resolveWith((states) {
+                                return Color.fromRGBO(33, 40, 68, 1.0); // цвет по умолчанию
+                              }),
+                              value: index,
+                              groupValue: _selectedIndex,
+                              onChanged: _isAnswered ? null : (val) => _onAnswerSelected(val!),
                             ),
-                            onTap: _isAnswered ? null : () => _onAnswerSelected(answer),
+                            tileColor: isCorrect ? Colors.green.shade100 : isWrong ? Colors.red.shade100 : null,
+                            onTap: _isAnswered ? null : () => _onAnswerSelected(index),
                           );
                         },
                       ),
                     ),
-                    // Показываем объяснение, если ответ выбран
-                    if (_isAnswered)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 16),
-                        child: Text(
-                          currentQuestion.explanation,
-                          style: const TextStyle(
-                            fontStyle: FontStyle.italic,
-                            color: Color.fromRGBO(33, 40, 68, 0.9),
-                          ),
+                    if (_isAnswered && currentQuestion.explanation.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.blue.shade200),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Пояснение:',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              currentQuestion.explanation,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                height: 1.4,
+                                color: Color.fromRGBO(33, 40, 68, 0.9),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    Padding(
-                      padding: const EdgeInsets.all(16),
+
+                    const SizedBox(height: 56),
+
+                    SizedBox(
+                      width: double.infinity,
                       child: ElevatedButton(
                         onPressed: _isAnswered ? _nextQuestion : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromRGBO(33, 40, 68, 1.0),   
+                          foregroundColor: const Color.fromRGBO(240, 232, 213, 1.0), 
+                          disabledBackgroundColor: Colors.grey.shade400,            
+                          disabledForegroundColor: Colors.grey.shade600,            
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
                         child: Text(
-                          _currentIndex + 1 == widget.questions.length ? 'Завершить' : 'Далее',
-                          style: const TextStyle(
-                            color: Color.fromRGBO(33, 40, 68, 1.0),
-                          ),
+                          _currentIndex + 1 == widget.questions.length 
+                              ? 'Завершить квиз' 
+                              : 'Далее',
+                          // Убираем явный color из стиля, чтобы использовался foregroundColor
+                          style: const TextStyle(fontSize: 16),
                         ),
                       ),
                     ),
