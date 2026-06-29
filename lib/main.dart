@@ -1,10 +1,17 @@
+import 'package:code_trivia/providers/UserProgress.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/theme.dart';
-import 'features/home/home_screen.dart';
+import 'features/welcome/welcome_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => UserProgress()..loadPoints(),
+      child: MyApp(),
+    ),
+  );
+
 }
 
 class MyApp extends StatelessWidget {
@@ -17,7 +24,13 @@ class MyApp extends StatelessWidget {
       title: 'CodeTrivia',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      home: const HomeScreen(),
+      home: const WelcomeScreen(),
+      builder: (context, child) {
+        return Container(
+          color: AppTheme.darkTheme.colorScheme.surface,
+          child: child,
+        );
+      },
     );
   }
 }
